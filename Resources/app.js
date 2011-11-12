@@ -5,7 +5,7 @@ Titanium.UI.iPhone.AnimationStyle;
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#FFF');
 
-var rootWindow;
+var nav;
 
 buildLoginWindow();
 
@@ -197,6 +197,8 @@ function buildMainWindow(e) {
 	});
 
 	buildRecentWin(win1);
+	buildSearchWin(win2);
+	buildSecurityWin(win3);
 	//
 	//  add tabs
 	//
@@ -207,6 +209,15 @@ function buildMainWindow(e) {
 	// open tab group
 	tabGroup.open({
 		transition : Titanium.UI.iPhone.AnimationStyle.CURL_UP
+	});
+	tabGroup.addEventListener('focus', function(e){
+	    tabGroup._activeTab = e.tab
+	    tabGroup._activeTabIndex = e.index
+	    if ( tabGroup._activeTabIndex == -1) return;
+	    Ti.API.info(tabGroup._activeTabIndex);
+	    Ti.API.info(tabGroup._activeTab.title);
+	    Ti.API._activeTab = tabGroup._activeTab;
+	    Ti.API.info(Ti.API._activeTab.title);
 	});
 
 }
@@ -247,14 +258,8 @@ function buildRecentWin(win) {
 	tableview.addEventListener('click',function(e){
 		Ti.API.debug("tableview.click "+JSON.stringify(e));
 		if(e.row && e.row.data) {
-			var w = Titanium.UI.createWindow({
-				title : 'Detalle',
-				barImage : 'img/franjaAzul.png',
-				titleImage : 'img/logo_blanco.png',
-				backgroundImage : 'img/bg.png',
-				backgroundColor : '#ffffff'
-			});
-			w.open();			
+			buildDetailWin(win,e.row.data);
+			Ti.API._activeTab.open(w,{animate:true});			
 		}
 	});
 	view.add(tableview);
@@ -263,6 +268,9 @@ function buildRecentWin(win) {
 	if(!token) {
 		token='858d636a92a0be15d51e6516bca810947e682bebb686307d4b90ccc9b599f02c';
 	}	
+	var btRefresh = Titanium.UI.createButton({
+		title: 'Refresh',
+	});
 	getCharges({
 		url:'http://172.20.152.224:8080/instant/Query?token='+token,
 		callback:function(data) {
@@ -280,26 +288,105 @@ function buildRecentWin(win) {
 	});
 }
 
-function buildDetailWin(curr,rec) {
-	var win = Titanium.UI.createWindow({
-		title : 'Detalle',
-		barImage : 'img/franjaAzul.png',
-		titleImage : 'img/logo_blanco.png',
-		backgroundImage : 'img/bg.png',
-		backgroundColor : '#ffffff'
-	});	
+function buildSearchWin(win) {
+	var data = [
+		{title:"Targeta **** 1234",hasChild:true},
+		{title:"Des de 01/11/2011",hasChild:true},
+		{title:"Fins 11/11/2011",hasChild:true},
+		{title:"Descripció",hasChild:true},
+	];
 	var view = Ti.UI.createView({
 		
 	});
 	var imgTop = Ti.UI.createImageView({
-		image: 'img/top-detalle.png',
+		image: 'img/top-buscar.png',
 		height: 50,
 		top: 0,
 		left: 0,
 	});
 	view.add(imgTop);
 	var lblTop = Ti.UI.createLabel({
-		text: 'Targeta Visa Classic **** 6727',
+		text: '',
+		top: 50,
+		left: 10,
+		backgroundColor: 'transparent',
+		height: 50,
+	});
+	view.add(lblTop);
+	var tableview = Titanium.UI.createTableView({
+			top: 100,
+	        data: data,
+	        backgroundColor: 'transparent',
+	        rowBackgroundColor: 'white'
+	});
+	tableview.addEventListener('click',function(e){
+	});
+	view.add(tableview);
+	win.add(view);
+}
+
+
+function buildSecurityWin(win) {
+	var data = [
+		{title:"Débito **** 5679",hasChild:true},
+		{title:"Visa Clásica **** 1234",hasChild:true},
+		{title:"Visa Oro **** 5678",hasChild:true},
+		{title:"Visa Platino **** 1235",hasChild:true},
+	];
+	var view = Ti.UI.createView({
+		
+	});
+	var imgTop = Ti.UI.createImageView({
+		image: 'img/top-movimientos.png',
+		height: 50,
+		top: 0,
+		left: 0,
+	});
+	view.add(imgTop);
+	var lblTop = Ti.UI.createLabel({
+		text: 'Cancelar Targeta',
+		top: 50,
+		left: 10,
+		backgroundColor: 'transparent',
+		height: 50,
+	});
+	view.add(lblTop);
+	var tableview = Titanium.UI.createTableView({
+			top: 100,
+	        data: data,
+	        backgroundColor: 'transparent',
+	        rowBackgroundColor: 'white'
+	});
+	tableview.addEventListener('click',function(e){
+	});
+	view.add(tableview);
+	win.add(view);
+}
+
+function buildDetailWin(curr,rec) {
+	var btEdit = Titanium.UI.createButton({
+		title: 'Edit',
+	});
+	var win = Titanium.UI.createWindow({
+		title : 'Detalle',
+		barImage : 'img/franjaAzul.png',
+		titleImage : 'img/logo_blanco.png',
+		backgroundImage : 'img/bg.png',
+		backgroundColor : '#ffffff',
+		rightNavButton: btEdit
+	});	
+	var view = Ti.UI.createView({
+		
+	});
+	var imgTop = Ti.UI.createImageView({
+		image: 'img/top-seguridad.png',
+		height: 50,
+		top: 0,
+		left: 0,
+	});
+	view.add(imgTop);
+	var lblTop = Ti.UI.createLabel({
+		text: 'Targeta Visa Classic **** '+rec.cardNumber.substr(12,4),
 		top: 50,
 		left: 10,
 		backgroundColor: 'transparent',
@@ -309,22 +396,30 @@ function buildDetailWin(curr,rec) {
 	var tableview = Titanium.UI.createTableView({
 			top: 100,
 	        data: [
-	        	{title:'Row 1'},
-	        	{title:'Row 2'},
-	        	{title:'Row 3'},
-	        	{title:'Row 4'},
-	        	{title:'Row 5'},
+	        	{title:rec.time},
+	        	{title:rec.amount+'EUR'},
+	        	{title:rec.store},
 	        ],
 	        backgroundColor: 'transparent',
 	        rowBackgroundColor: 'white'
 	});
+	var row = Ti.UI.createTableViewRow({
+		height:240,
+		selectionStyle : Ti.UI.iPhone.TableViewCellSelectionStyle.NONE
+	});
+	var img = Ti.UI.createImageView({
+		url: 'http://maps.googleapis.com/maps/api/staticmap?center=41.40244,2.19459&zoom=15&size=240x240&maptype=roadmap&markers=color:red%7Clabel:XS%7C41.40244,2.19459&sensor=false',
+		height: 240,
+	});
+	row.add(img);
+	tableview.appendRow(row);
 	view.add(tableview);
 	win.add(view);
-	Ti.UI.currentWindow.open(curr,{animate:true});
+	Ti.API._activeTab.open(win,{animate:true});			
 }
 
 
-if(false) {
+if(true) {
 	Titanium.Network.registerForPushNotifications({
 		types : [Titanium.Network.NOTIFICATION_TYPE_BADGE, Titanium.Network.NOTIFICATION_TYPE_ALERT, Titanium.Network.NOTIFICATION_TYPE_SOUND],
 		success : successCallback,
@@ -373,7 +468,7 @@ function messageCallback(e) {
      } else {
           message = 'No APS content';
      }
-     alert(message);
+     Ti.API.debug(message);
 }
 
 
